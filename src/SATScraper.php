@@ -646,14 +646,19 @@ class SATScraper
                 $temp['estatusProcesoCancelacion'] = trim($tds->getNode(12)->textContent);
                 $temp['fechaProcesoCancelacion'] = trim($tds->getNode(13)->textContent);
                 $temp['fechaCancelacion'] = $temp['fechaProcesoCancelacion'];
+                $temp['urlXml'] = null;
 
-                $onClickAttribute = $node->filter('span#BtnDescarga')->first()->attr('onclick');
+                $spansBtnDownload = $node->filter('span#BtnDescarga');
+                $onClickAttribute = $spansBtnDownload->count() > 0 ? $spansBtnDownload->first()->attr('onclick') : null;
 
-                $temp['urlXml'] = str_replace(
-                    ["return AccionCfdi('", "','Recuperacion');"],
-                    [URLS::SAT_URL_PORTAL_CFDI, ''],
-                    $onClickAttribute
-                );
+                if (!is_null($onClickAttribute)) {
+                    $temp['urlXml'] = str_replace(
+                        ["return AccionCfdi('", "','Recuperacion');"],
+                        [URLS::SAT_URL_PORTAL_CFDI, ''],
+                        $onClickAttribute
+                    );
+                }
+
                 $this->data[$temp['uuid']] = $temp;
             });
         }
@@ -683,6 +688,10 @@ class SATScraper
     public function getUrls(): \Generator
     {
         foreach ($this->getData() as $uuid => $data) {
+            if (is_null($data['urlXml'])) {
+                continue;
+            }
+
             yield $data['urlXml'];
         }
     }
